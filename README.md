@@ -82,6 +82,26 @@ npm start
 
 5. Access the application at http://localhost:3000
 
+### Windows Specific Setup
+
+When installing on Windows environments, you may encounter issues with the `wrtc` package, which requires native compilation. The application includes a fallback mechanism that will automatically handle this case:
+
+1. Run the setup script that handles Windows compatibility:
+
+```bash
+# First time setup
+./init-repo.sh  # In Git Bash or WSL
+# OR
+sh init-repo.sh
+```
+
+2. If WebRTC features are limited on Windows, the application will still function but with reduced streaming capabilities.
+
+3. For best results, consider:
+   - Using WSL (Windows Subsystem for Linux) for server-side components
+   - Running the Docker containers on Linux or macOS
+   - Using a browser that has good WebRTC support (Chrome, Edge, Firefox)
+
 ## Development Status
 
 This is a Proof of Concept implementation with basic features for demonstration purposes.

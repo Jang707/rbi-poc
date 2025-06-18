@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node scripts/check-wrtc.js"
   },
   "author": "",
   "license": "MIT",
@@ -14,10 +15,12 @@
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
     "uuid": "^9.0.1",
-    "wrtc": "^0.4.7",
     "ws": "^8.14.2",
     "docker-compose": "^0.24.2",
     "dockerode": "^4.0.0"
+  },
+  "optionalDependencies": {
+    "wrtc": "^0.4.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

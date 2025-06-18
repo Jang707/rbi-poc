@@ -1,6 +1,53 @@
-const wrtc = require('wrtc');
 const WebSocket = require('ws');
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+// Windows 호환성을 위한 wrtc 패키지 로드 방식 수정
+let wrtc;
+try {
+  // wrtc-mock.js 파일이 있는지 확인
+  const mockPath = path.join(__dirname, 'wrtc-mock.js');
+  if (fs.existsSync(mockPath) && process.platform === 'win32') {
+    console.log('Using WebRTC mock implementation for Windows');
+    wrtc = require('./wrtc-mock');
+  } else {
+    wrtc = require('wrtc');
+  }
+} catch (err) {
+  console.warn('Failed to load wrtc package:', err.message);
+  console.warn('Using mock implementation');
+  
+  // 간단한 모의 구현
+  wrtc = {
+    RTCPeerConnection: function() { 
+      return {
+        onicecandidate: null,
+        oniceconnectionstatechange: null,
+        onconnectionstatechange: null,
+        addTrack: () => {},
+        setRemoteDescription: () => Promise.resolve(),
+        createAnswer: () => Promise.resolve({}),
+        setLocalDescription: () => Promise.resolve(),
+        addIceCandidate: () => Promise.resolve(),
+        close: () => {}
+      };
+    },
+    RTCSessionDescription: function() {},
+    RTCIceCandidate: function() {},
+    MediaStream: function() { 
+      return { addTrack: () => {} };
+    },
+    nonstandard: {
+      RTCVideoSource: function() {
+        return {
+          createTrack: () => ({ kind: 'video' }),
+          onFrame: () => {}
+        };
+      }
+    }
+  };
+}
 
 // WebRTC 연결을 관리할 객체
 const peerConnections = {};
