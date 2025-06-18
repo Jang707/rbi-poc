@@ -11,7 +11,9 @@
     "client": "cd client && npm start",
     "build:client": "cd client && npm run build",
     "build:docker": "docker build -t pixelpush-rbi ./docker",
-    "start": "concurrently \"npm run server\" \"npm run client\""
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start:server": "cd server && npm start",
+    "start:prod": "npm run build:client && npm run start:server"
   },
   "author": "",
   "license": "MIT",

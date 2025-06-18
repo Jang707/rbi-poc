@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const Docker = require('dockerode');
 const sessionManager = require('./session-manager');
 const webrtcServer = require('./webrtc-server');
+const fs = require('fs');
 
 // Express 앱 초기화
 const app = express();
@@ -20,8 +21,20 @@ const io = socketIo(server, {
 // Docker 클라이언트 초기화
 const docker = new Docker();
 
+// 개발 모드 확인
+const isDev = process.env.NODE_ENV !== 'production';
+const clientBuildPath = path.join(__dirname, '../client/build');
+const clientPublicPath = path.join(__dirname, '../client/public');
+
 // 정적 파일 제공 (클라이언트 측 코드)
-app.use(express.static(path.join(__dirname, '../client/build')));
+// 프로덕션 환경이거나 빌드 폴더가 존재하면 빌드된 파일 사용
+if (!isDev && fs.existsSync(clientBuildPath)) {
+  console.log('Serving static files from build directory');
+  app.use(express.static(clientBuildPath));
+} else {
+  console.log('Running in development mode - API only');
+  // 개발 환경에서는 API만 제공 (React 앱은 자체 서버에서 실행)
+}
 
 // API 라우트
 app.get('/api/health', (req, res) => {
@@ -92,8 +105,52 @@ app.get('/api/sessions/:sessionId', (req, res) => {
 });
 
 // 클라이언트 앱 서빙 (React SPA를 위한 설정)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+app.get('*', (req, res, next) => {
+  // API 경로는 Pass-through
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
+  const indexPath = path.join(__dirname, '../client/build/index.html');
+  
+  // 프로덕션 환경이거나 빌드 폴더가 존재하면 SPA 제공
+  if (!isDev && fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // 개발 환경에서는 API 요청이 아닌 경우 프론트엔드 서버 주소로 리다이렉트
+    res.send(`
+      <html>
+        <head>
+          <title>PixelPush RBI - Development Mode</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+            h1 { color: #2563eb; }
+            code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; }
+            .highlight { background: #fef9c3; padding: 1rem; border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          <h1>PixelPush RBI API Server</h1>
+          <p>The server is running in development mode.</p>
+          
+          <div class="highlight">
+            <h2>Development Setup Instructions:</h2>
+            <p>You need to run both the API server and React dev server separately:</p>
+            <ol>
+              <li>Keep this API server running (<code>npm run server</code>)</li>
+              <li>Open another terminal and run the React dev server: <code>cd client && npm start</code></li>
+              <li>Access the application at <a href="http://localhost:5173">http://localhost:5173</a></li>
+            </ol>
+          </div>
+          
+          <p>For production, build the client first: <code>npm run build:client</code></p>
+          
+          <h2>API Status</h2>
+          <p>API server is running at <a href="/api/health">/api/health</a></p>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // Socket.IO 이벤트 핸들링

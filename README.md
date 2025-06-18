@@ -73,14 +73,27 @@ npm install
 4. Start the development server:
 
 ```bash
-# In the server directory
-npm run dev
-
-# In a separate terminal, in the client directory
+# 개발 환경 실행 (클라이언트, 서버 모두 개발 모드로 실행)
 npm start
+
+# 또는 개별적으로 실행
+# 서버만 실행
+npm run server
+
+# 클라이언트만 실행
+npm run client
 ```
 
-5. Access the application at http://localhost:3000
+5. Access the application:
+   - 개발 모드: http://localhost:5173
+   - 프로덕션 모드: http://localhost:3000
+
+6. 프로덕션 빌드 및 실행:
+
+```bash
+# 클라이언트 빌드 후 서버 실행
+npm run start:prod
+```
 
 ### Windows Specific Setup
 
