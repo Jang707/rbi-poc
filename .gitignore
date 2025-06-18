@@ -1,0 +1,31 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnp
+.pnp.js
+
+# Build outputs
+/client/build
+/client/dist
+/dist
+/*.tgz
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime-workspace
+
+# System files
+.DS_Store
+Thumbs.db

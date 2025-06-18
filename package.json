@@ -1,0 +1,21 @@
+{
+  "name": "pixelpush-rbi",
+  "version": "1.0.0",
+  "description": "Pixel Push Remote Browser Isolation PoC",
+  "private": true,
+  "scripts": {
+    "server:install": "cd server && npm install",
+    "client:install": "cd client && npm install",
+    "install:all": "npm run server:install && npm run client:install",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build:client": "cd client && npm run build",
+    "build:docker": "docker build -t pixelpush-rbi ./docker",
+    "start": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
