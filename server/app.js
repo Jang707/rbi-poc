@@ -77,14 +77,14 @@ app.post('/api/sessions', async (req, res) => {
       port: containerPort,
       createdAt: new Date(),
       // 5분 후 만료
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 5 * 60 * 10000)
     });
     
     // 세션 정보 반환
     res.status(201).json({
       sessionId,
       url: `/session/${sessionId}`,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 5 * 60 * 10000)
     });
   } catch (error) {
     console.error('Error creating session:', error);
