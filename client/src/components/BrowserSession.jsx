@@ -215,13 +215,18 @@ const BrowserSession = () => {
       setConnected(false);
     });
   };
-  
-  // WebRTC 연결 설정
+    // WebRTC 연결 설정
   const setupWebRTC = () => {
     const configuration = {
       iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' }
-      ]
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' }
+      ],
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
+      sdpSemantics: 'unified-plan'
     };
     
     // RTCPeerConnection 생성

@@ -159,25 +159,87 @@ function setupBrowserStream(sessionId, pc) {
   }
   
   console.log(`Setting up browser stream for session ${sessionId}`);
+    // FFmpeg를 사용하여 화면을 스트리밍
+  const startScreenCapture = () => {
+    // 환경 확인
+    const isWindows = process.platform === 'win32';
+    
+    let ffmpegArgs;
+    if (isWindows) {
+      // Windows용 ffmpeg 명령어 (GDI 캡처 사용) - 더 낮은 해상도와 비트레이트 사용
+      ffmpegArgs = [
+        '-f', 'gdigrab',
+        '-framerate', '10',  // 프레임 레이트 낮춤
+        '-i', 'desktop',
+        '-c:v', 'libvpx',
+        '-b:v', '500k',     // 비트레이트 낮춤
+        '-deadline', 'realtime',
+        '-cpu-used', '8',    // CPU 사용률 최소화
+        '-auto-alt-ref', '0',
+        '-resize', '1280x720', // 해상도 낮춤
+        '-pix_fmt', 'yuv420p',
+        '-f', 'webm',
+        'pipe:1'
+      ];
+    } else {
+      // Linux용 ffmpeg 명령어 (기존 코드)
+      ffmpegArgs = [
+        '-f', 'x11grab',
+        '-video_size', '1280x720',
+        '-framerate', '10',
+        '-i', ':99.0',
+        '-c:v', 'libvpx',
+        '-b:v', '500k',
+        '-deadline', 'realtime',
+        '-cpu-used', '8',
+        '-pix_fmt', 'yuv420p',
+        '-f', 'webm',
+        'pipe:1'
+      ];
+    }
+    
+    console.log('Starting ffmpeg with args:', ffmpegArgs.join(' '));
+    return spawn('ffmpeg', ffmpegArgs);
+  };
   
-  // FFmpeg를 사용하여 Xvfb 화면을 스트리밍
-  const ffmpeg = spawn('ffmpeg', [
-    '-f', 'x11grab',
-    '-video_size', '1920x1080',
-    '-framerate', '15',
-    '-i', `:99.0`,
-    '-c:v', 'libvpx',
-    '-b:v', '1M',
-    '-deadline', 'realtime',
-    '-cpu-used', '4',
-    '-pix_fmt', 'yuv420p',
-    '-f', 'webm',
-    'pipe:1'
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+  // ffmpeg 프로세스 시작
+  const ffmpeg = startScreenCapture();
   
   // 오류 처리
-  ffmpeg.stderr.on('data', (data) => {
-    console.log(`FFmpeg stderr: ${data.toString()}`);
+  ffmpeg.on('error', (err) => {
+    console.error('FFmpeg 오류 발생:', err);
+    console.log('더미 비디오 스트림으로 대체합니다.');
+    
+    // 더미 비디오 프레임 생성 (단색 프레임)
+    const width = 640;
+    const height = 480;
+    const dummyFrameInterval = setInterval(() => {
+      // 간단한 더미 프레임 생성
+      const frameSize = width * height * 3 / 2; // YUV420
+      const frame = Buffer.alloc(frameSize);
+      
+      // Y 평면을 회색으로 채움
+      frame.fill(128, 0, width * height);
+      
+      // 컬러 정보는 중립값으로
+      frame.fill(128, width * height);
+      
+      // 프레임 전송
+      videoTrack.onFrame({
+        data: new Uint8Array(frame),
+        width: width,
+        height: height
+      });
+    }, 100); // 10fps에 가까운 속도
+    
+    // 연결 종료 시 정리
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        console.log(`Connection for session ${sessionId} ended`);
+        clearInterval(dummyFrameInterval);
+        delete peerConnections[sessionId];
+      }
+    };
   });
   
   // 미디어 소스 생성
