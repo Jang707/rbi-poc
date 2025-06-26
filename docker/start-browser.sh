@@ -16,7 +16,23 @@ if [ "$1" == "server" ]; then
 else
   # 헤드리스 Chrome 실행
   echo "Starting headless Chromium..."
-  chromium --no-sandbox --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --start-maximized --remote-debugging-port=9222 "http://example.com"
+  
+  # 여러 가능한 경로 시도
+  if command -v /usr/bin/chromium &> /dev/null; then
+    CHROME_PATH="/usr/bin/chromium"
+  elif command -v /usr/bin/chromium-browser &> /dev/null; then
+    CHROME_PATH="/usr/bin/chromium-browser"
+  elif command -v chromium &> /dev/null; then
+    CHROME_PATH="chromium"
+  elif command -v chromium-browser &> /dev/null; then
+    CHROME_PATH="chromium-browser" 
+  else
+    echo "Error: Chromium not found"
+    exit 1
+  fi
+  
+  echo "Using Chromium at: $CHROME_PATH"
+  $CHROME_PATH --no-sandbox --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --start-maximized --remote-debugging-port=9222 "http://example.com"
 fi
 
 # 프로세스가 종료되지 않도록 대기
